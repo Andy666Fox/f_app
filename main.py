@@ -1,14 +1,17 @@
-from  fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import ValidationError
 from fastapi.responses import JSONResponse
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from datetime import datetime
-from enum import Enum
+from fastapi_users import FastAPIUsers
+
+
+from auth.auth import auth_backend
+from auth.schemas import UserCreate, UserRead
+from auth.database import User
+from auth.manager import get_user_manager
 
 app = FastAPI(
-    title='MyApp'
+    title='Fucking Slave'
 )
 
 @app.exception_handler(ValidationError)
@@ -17,43 +20,36 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder({'detail': exc.errors()})
     )
+    
+fastapi_users = FastAPIUsers[User, int](
+    get_user_manager,
+    [auth_backend]
+)
 
 
-class Trade(BaseModel):
-    id: int
-    user_id: int
-    currency: str = Field(max_length=5)
-    side: str 
-    price: float = Field(ge=0)
-    amount: float
-    
-class DegreeType(Enum):
-    novice = 'novice'
-    advanced = 'advanced'
-    expert = 'expert'
-    
-class Degree(BaseModel):
-    id: int 
-    created_at: str
-    type_degree: DegreeType
-    
-    
-class User(BaseModel):
-    id: int 
-    role: str 
-    name: str
-    degree: Optional[List[Degree]] = []
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix='/auth/jwt',
+    tags=['auth']
+)
+
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix='/auth',
+    tags=['auth']
+)
+
+current_user = fastapi_users.current_user()
+
+@app.get('/protected-route')
+def protected_route(user: User = Depends(current_user)):
+    return f'Hello, {user.email}'
+
+@app.get('/unprotected-route')
+def unprotected_route():
+    return f'Hello, baby'
 
 
-@app.get('/users/{user_id}', response_model=List[User])
-def get_user(user_id: int):
-    return [user for user in fake_users if user.get('id')==user_id]
-
-@app.post('/trades')
-def add_trades(trades: List[Trade]):
-    fake_trades.extend(trades)
-    return {'status': 200, 'data': fake_trades}
-    
 
 
 
