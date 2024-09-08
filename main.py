@@ -1,4 +1,7 @@
-from  fastapi import FastAPI
+from  fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import ValidationError
+from fastapi.responses import JSONResponse
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -8,8 +11,15 @@ app = FastAPI(
     title='MyApp'
 )
 
+@app.exception_handler(ValidationError)
+async def validation_exception_handler(request: Request, exc: ValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder({'detail': exc.errors()})
+    )
+
 fake_users = [
-    {'id': 1, 'role': 'admin', 'name': 'John', 'degree': [
+    {'id': 1, 'role': 'admin', 'name': [], 'degree': [
         {'id': 1, 'created_at': '2022-01-01', 'type_degree': 'expert'}]},
     
     {'id': 2, 'role': 'trader', 'name': 'Bob'},
@@ -54,7 +64,7 @@ class User(BaseModel):
     id: int 
     role: str 
     name: str
-    degree: Optional[List[Degree]]
+    degree: Optional[List[Degree]] = []
 
 
 @app.get('/users/{user_id}', response_model=List[User])
