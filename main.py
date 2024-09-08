@@ -18,28 +18,6 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
         content=jsonable_encoder({'detail': exc.errors()})
     )
 
-fake_users = [
-    {'id': 1, 'role': 'admin', 'name': [], 'degree': [
-        {'id': 1, 'created_at': '2022-01-01', 'type_degree': 'expert'}]},
-    
-    {'id': 2, 'role': 'trader', 'name': 'Bob'},
-    
-    {'id': 3, 'role': 'customer', 'name': 'Vasiliy', 'degree': [
-        {'id': 3, 'created_at': '2022-01-04', 'type_degree': 'advanced'}]},
-    
-    {'id': 4, 'role': 'admin', 'name': 'Nadezhda', 'degree': [
-        {'id': 4, 'created_at': '2022-01-02', 'type_degree': 'expert'}]},
-    
-    {'id': 5, 'role': 'trader', 'name': 'Igor', 'degree': [
-        {'id': 5, 'created_at': '2022-03-03', 'type_degree': 'novice'}]}
-    
-]
-
-fake_trades = [
-    {'id': 1, 'user_id': 1, 'currency': 'BTC', 'side': 'buy', 'price': 433, 'amount': 2.87},
-    {'id': 2, 'user_id': 1, 'currency': 'AUT', 'side': 'sell', 'price': 12, 'amount': 3.12},
-    {'id': 3, 'user_id': 2, 'currency': 'ETH', 'side': 'buy', 'price': 76.8, 'amount': 3.47}
-]
 
 class Trade(BaseModel):
     id: int
