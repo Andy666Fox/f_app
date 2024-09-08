@@ -1,17 +1,28 @@
 from  fastapi import FastAPI
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
+from enum import Enum
 
 app = FastAPI(
     title='MyApp'
 )
 
 fake_users = [
-    {'id': 1, 'role': 'admin', 'name': 'John'},
+    {'id': 1, 'role': 'admin', 'name': 'John', 'degree': [
+        {'id': 1, 'created_at': '2022-01-01', 'type_degree': 'expert'}]},
+    
     {'id': 2, 'role': 'trader', 'name': 'Bob'},
-    {'id': 3, 'role': 'customer', 'name': 'Vasiliy'},
-    {'id': 4, 'role': 'admin', 'name': 'Nadezhda'},
-    {'id': 5, 'role': 'trader', 'name': 'Igor'}
+    
+    {'id': 3, 'role': 'customer', 'name': 'Vasiliy', 'degree': [
+        {'id': 3, 'created_at': '2022-01-04', 'type_degree': 'advanced'}]},
+    
+    {'id': 4, 'role': 'admin', 'name': 'Nadezhda', 'degree': [
+        {'id': 4, 'created_at': '2022-01-02', 'type_degree': 'expert'}]},
+    
+    {'id': 5, 'role': 'trader', 'name': 'Igor', 'degree': [
+        {'id': 5, 'created_at': '2022-03-03', 'type_degree': 'novice'}]}
+    
 ]
 
 fake_trades = [
@@ -27,8 +38,26 @@ class Trade(BaseModel):
     side: str 
     price: float = Field(ge=0)
     amount: float
+    
+class DegreeType(Enum):
+    novice = 'novice'
+    advanced = 'advanced'
+    expert = 'expert'
+    
+class Degree(BaseModel):
+    id: int 
+    created_at: str
+    type_degree: DegreeType
+    
+    
+class User(BaseModel):
+    id: int 
+    role: str 
+    name: str
+    degree: Optional[List[Degree]]
 
-@app.get('/users/{user_id}')
+
+@app.get('/users/{user_id}', response_model=List[User])
 def get_user(user_id: int):
     return [user for user in fake_users if user.get('id')==user_id]
 
